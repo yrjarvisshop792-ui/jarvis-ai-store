@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template_string, redirect
+from flask import Flask, request, render_template, render_template_string, redirect
 import smtplib
 from email.mime.text import MIMEText
 
@@ -8,7 +8,7 @@ app = Flask(__name__)
 # ⚙️ यहाँ अपनी डिटेल्स भरें
 # ========================================================
 MY_EMAIL = "yr3574524@gmail.com"
-MY_PASSWORD = "hyqp rqhq jijr iexr" # बिना स्पेस के पेस्ट करें
+MY_PASSWORD = "hyqprqhqjijriexr" # बिना स्पेस के पेस्ट करें
 
 # यहाँ अपने ज़ार्विस का गूगल ड्राइव या डाउनलोड लिंक डाल दें
 SOURCE_CODE_LINK = "https://drive.google.com/drive/folders/1eAtrnK9QToNPT8zn5AWbpZ8cCS4LZl2K?usp=sharing" 
@@ -16,6 +16,11 @@ SOURCE_CODE_LINK = "https://drive.google.com/drive/folders/1eAtrnK9QToNPT8zn5AWb
 
 # पेंडिंग पेमेंट्स को याद रखने के लिए लिस्ट
 pending_payments = []
+
+# 🔥 यह नया रूट है जो तुम्हारी index.html फाइल को लोड करेगा!
+@app.route('/')
+def home():
+    return render_template('index.html')
 
 @app.route('/verify-payment', methods=['POST'])
 def verify_payment():
@@ -29,7 +34,7 @@ def verify_payment():
     
     # आपको (एडमिन को) अलर्ट ईमेल भेजना
     try:
-        msg = MIMEText(f"Hi Yash,\n\nNew Payment Request Received!\n\nName: {name}\nEmail: {email}\nUTR/Transaction ID: {utr}\n\nTo approve this payment, go to: http://127.0.0.1:5000/admin")
+        msg = MIMEText(f"Hi Yash,\n\nNew Payment Request Received!\n\nName: {name}\nEmail: {email}\nUTR/Transaction ID: {utr}\n\nTo approve this payment, go to: https://jarvis-ai-store.onrender.com/admin")
         msg['Subject'] = '🚨 New Jarvis AI Purchase Request'
         msg['From'] = MY_EMAIL
         msg['To'] = MY_EMAIL
@@ -102,4 +107,4 @@ def approve_user(index):
     return redirect('/admin')
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    app.run(debug=True)
