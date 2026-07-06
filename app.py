@@ -8,7 +8,7 @@ app = Flask(__name__)
 # ⚙️ यहाँ अपनी डिटेल्स भरें
 # ========================================================
 MY_EMAIL = "yr3574524@gmail.com"
-MY_PASSWORD = "hyqprqhqjijriexr" # बिना स्पेस के पेस्ट करें
+MY_PASSWORD = "bfosrvbgkspkffay" # बिना स्पेस के पेस्ट करें
 
 # यहाँ अपने ज़ार्विस का गूगल ड्राइव या डाउनलोड लिंक डाल दें
 SOURCE_CODE_LINK = "https://drive.google.com/drive/folders/1eAtrnK9QToNPT8zn5AWbpZ8cCS4LZl2K?usp=sharing" 
