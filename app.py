@@ -32,20 +32,26 @@ def verify_payment():
     user_data = {"name": name, "email": email, "utr": utr}
     pending_payments.append(user_data)
     
-    # आपको (एडमिन को) अलर्ट ईमेल भेजना
+    # प्रिंट स्टेटमेंट रेंडर के Logs में डेटा दिखाएगा (बिना फेल हुए)
+    print(f"🚨 New Payment Request Saved: Name: {name}, Email: {email}, UTR: {utr}")
+    
+    # आपको (एडमिन को) अलर्ट ईमेल भेजना - सुरक्षित तरीका ताकि एरर न आए
     try:
         msg = MIMEText(f"Hi Yash,\n\nNew Payment Request Received!\n\nName: {name}\nEmail: {email}\nUTR/Transaction ID: {utr}\n\nTo approve this payment, go to: https://jarvis-ai-store.onrender.com/admin")
         msg['Subject'] = '🚨 New Jarvis AI Purchase Request'
         msg['From'] = MY_EMAIL
         msg['To'] = MY_EMAIL
         
-        server = smtplib.SMTP('smtp.gmail.com', 587)
+        # लोकल टाइमआउट जोड़ा ताकि रेंडर सर्वर अनंत काल तक न लटके
+        server = smtplib.SMTP('smtp.gmail.com', 587, timeout=10)
         server.starttls()
         server.login(MY_EMAIL, MY_PASSWORD)
         server.sendmail(MY_EMAIL, MY_EMAIL, msg.as_string())
         server.quit()
+        print("Success: Admin notification email sent!")
     except Exception as e:
-        print("Error sending admin notification:", e)
+        # अगर ईमेल ब्लॉक भी हो जाए, तो एरर यहाँ छुप जाएगा और वेबसाइट क्रैश नहीं होगी
+        print("Email Warning (Skipped or Blocked):", e)
 
     return "<h1>Details Submitted Successfully!</h1><p>Our team is verifying your UTR number. The source code will be emailed to you within 10-30 minutes. Thank you!</p>"
 
@@ -95,7 +101,7 @@ def approve_user(index):
             msg['From'] = MY_EMAIL
             msg['To'] = user['email']
             
-            server = smtplib.SMTP('smtp.gmail.com', 587)
+            server = smtplib.SMTP('smtp.gmail.com', 587, timeout=10)
             server.starttls()
             server.login(MY_EMAIL, MY_PASSWORD)
             server.sendmail(MY_EMAIL, user['email'], msg.as_string())
