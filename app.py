@@ -1,7 +1,11 @@
-from flask import Flask, request, render_template, render_template_string, redirect
+from flask import Flask, request, render_template, render_template_string, redirect, session
 import urllib.parse
 
 app = Flask(__name__)
+
+# 🔑 सुरक्षा के लिए सीक्रेट की और एडमिन पासवर्ड
+app.secret_key = "super_secret_jarvis_key_yash" # यह सेशन को सुरक्षित रखता है
+ADMIN_PASSWORD = "YASH_JARVIS_STORE_@_SECURE" # 🎯 अपना एडमिन पासवर्ड यहाँ बदलो!
 
 # ========================================================
 # ⚙️ CONFIGURATION
@@ -14,7 +18,6 @@ pending_payments = {}
 
 @app.route('/')
 def home():
-    # नोट: आपको अपने index.html फॉर्म में एक input field जोड़ना होगा जिसका name='phone' हो।
     return render_template('index.html')
 
 @app.route('/verify-payment', methods=['POST'])
@@ -23,13 +26,12 @@ def verify_payment():
     name = request.form.get('name')
     email = request.form.get('email')
     utr = request.form.get('utr')
-    phone = request.form.get('phone') # फॉर्म से फोन नंबर निकालना
+    phone = request.form.get('phone')
 
-    # अगर नंबर में '+' या कंट्री कोड नहीं है, तो उसे व्हाट्सएप के लिए सही करना
     if phone:
         phone = phone.strip().replace(" ", "").replace("-", "")
         if not phone.startswith('+') and len(phone) == 10:
-            phone = "91" + phone # भारत के नंबरों के लिए डिफ़ॉल्ट 91 जोड़ना
+            phone = "91" + phone
         elif phone.startswith('+'):
             phone = phone.replace("+", "")
 
@@ -41,11 +43,50 @@ def verify_payment():
         "phone": phone
     }
     
-    print(f"🚨 New Request Saved [ID: {request_counter}]: {name} (Ph: {phone})")
     return "<h1>Details Submitted Successfully!</h1><p>Our team is verifying your UTR number. The source code link will be sent directly to your WhatsApp shortly after verification. Thank you!</p>"
 
-@app.route('/admin')
+# 🔒 एडमिन लॉगिन पेज (Password Prompt)
+@app.route('/admin', methods=['GET', 'POST'])
 def admin_panel():
+    if request.method == 'POST':
+        entered_password = request.form.get('password')
+        if entered_password == ADMIN_PASSWORD:
+            session['logged_in'] = True
+            return redirect('/admin')
+        else:
+            return '''
+            <div style="text-align:center; margin-top:50px; font-family:Arial;">
+                <h3 style="color:red;">❌ Incorrect Password! Access Denied.</h3>
+                <a href="/admin">Try Again</a>
+            </div>
+            '''
+
+    # अगर यूजर पहले से लॉगिन नहीं है, तो उसे पासवर्ड का डिब्बा दिखाओ
+    if not session.get('logged_in'):
+        return '''
+        <html>
+        <head>
+            <title>Admin Login</title>
+            <style>
+                body { font-family: Arial, sans-serif; background: #0f172a; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+                .login-box { background: #1e293b; padding: 40px; border-radius: 12px; border: 1px solid #334155; text-align: center; width: 300px; }
+                input { width: 100%; padding: 12px; margin: 15px 0; background: #05070a; border: 1px solid #475569; color: white; border-radius: 6px; text-align: center; }
+                button { width: 100%; padding: 12px; background: #00f3ff; color: black; border: none; font-weight: bold; border-radius: 6px; cursor: pointer; }
+            </style>
+        </head>
+        <body>
+            <div class="login-box">
+                <h2>🤖 Admin Access</h2>
+                <form method="POST">
+                    <input type="password" name="password" placeholder="Enter Admin Password" required>
+                    <button type="submit">ACCESS PANEL</button>
+                </form>
+            </div>
+        </body>
+        </html>
+        '''
+
+    # अगर लॉगिन सक्सेसफुल है, तो असली एडमिन पैनल दिखाओ
     html_content = '''
     <html>
     <head>
@@ -56,12 +97,12 @@ def admin_panel():
             th, td { padding: 12px; border: 1px solid #334155; text-align: left; }
             th { background: #334155; color: #38bdf8; }
             .btn { background: #16a34a; color: white; padding: 8px 16px; text-decoration: none; font-weight: bold; border-radius: 4px; display: inline-block; }
-            .btn:hover { background: #15803d; }
+            .logout { float: right; background: #ef4444; color: white; padding: 8px 16px; text-decoration: none; font-weight: bold; border-radius: 4px; }
         </style>
     </head>
     <body>
+        <a class="logout" href="/admin/logout">Secure Logout</a>
         <h2>🤖 Jarvis Shop - Admin Control Panel</h2>
-        <p>Review requests and click 'Approve & Send Code' below to open direct customer chat.</p>
         <table>
             <tr><th>Name</th><th>Email</th><th>WhatsApp Number</th><th>UTR ID</th><th>Action</th></tr>
             {% if payments %}
@@ -83,13 +124,21 @@ def admin_panel():
     '''
     return render_template_string(html_content, payments=pending_payments)
 
+# 🚪 लॉगआउट रूट
+@app.route('/admin/logout')
+def admin_logout():
+    session.pop('logged_in', None)
+    return redirect('/admin')
+
 @app.route('/approve/<string:req_id>')
 def approve_user(req_id):
+    if not session.get('logged_in'):
+        return "Unauthorized", 401
+        
     if req_id in pending_payments:
         user = pending_payments.pop(req_id)
         customer_phone = user['phone']
         
-        # 🌟 नया और सुपर प्रोफेशनल लंबा मैसेज डिज़ाइन 🌟
         message = (
             f"⚡ *OFFICIAL JARVIS AI ASSISTANT STORE* ⚡\n\n"
             f"Hello *{user['name']}*! 👋\n\n"
@@ -115,8 +164,6 @@ def approve_user(req_id):
         )
         
         encoded_message = urllib.parse.quote(message)
-        
-        # अब यह लिंक सीधे उसी कस्टमर के नंबर पर व्हाट्सएप खोलेगा (कांटेक्ट सेलेक्ट करने का झंझट खत्म)
         whatsapp_url = f"https://api.whatsapp.com/send?phone={customer_phone}&text={encoded_message}"
         return redirect(whatsapp_url)
     return redirect('/admin')
