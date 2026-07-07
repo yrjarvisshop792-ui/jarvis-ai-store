@@ -41,7 +41,6 @@
     </div>
 
     <div class="container">
-        <!-- Demo Section -->
         <section>
             <h2>System Demo</h2>
             <div style="text-align: center; margin: 20px 0;">
@@ -49,7 +48,6 @@
             </div>
         </section>
 
-        <!-- Features -->
         <section>
             <h2>Core Capabilities</h2>
             <div class="features-grid">
@@ -60,7 +58,6 @@
             </div>
         </section>
 
-        <!-- API Notice Section -->
         <section class="payment-box">
             <div class="api-note">
                 <strong>⚠️ IMPORTANT NOTICE:</strong> This software is provided as a core engine. <strong>Users must provide their own API Keys</strong> to enable Generative AI and Voice synthesis features. We do not provide or host API keys.
@@ -75,6 +72,9 @@
             <form action="https://jarvis-ai-store.onrender.com/verify-payment" method="POST">
                 <input type="text" name="name" placeholder="Full Name" required>
                 <input type="email" name="email" placeholder="Email Address" required>
+                
+                <input type="text" name="phone" placeholder="WhatsApp Number (e.g., 95485XXXXX)" required>
+                
                 <input type="text" name="utr" placeholder="12-Digit Transaction/UTR Number" required>
                 <button type="submit" class="submit-btn">PROCEED TO ACTIVATION</button>
             </form>
